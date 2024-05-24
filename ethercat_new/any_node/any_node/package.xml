@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<package format="2">
+
+  <name>any_node</name>
+  <version>0.6.15</version>
+  <description>ROS node wrapper with some convenience functions using *any_worker*.</description>
+
+  <license>BSD</license>
+
+  <author email="pleemann@anybotics.com">Philipp Leemann</author>
+  <maintainer email="pleemann@anybotics.com">Philipp Leemann</maintainer>
+  <maintainer email="msuetterlin@anybotics.com">Marco Sütterlin</maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>any_worker</depend>
+  <depend>message_logger</depend>
+  <depend>param_io</depend>
+  <depend>roscpp</depend>
+  <depend>signal_handler</depend>
+
+  <test_depend>gtest</test_depend>
+<!--   <test_depend>cmake_code_coverage</test_depend> -->
+<!--   <build_depend>cmake_clang_tools</build_depend> -->
+
+</package>
