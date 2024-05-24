@@ -1,0 +1,65 @@
+ethercat_master:
+  time_step:                          0.0025
+  update_rate_too_low_warn_threshold: 50
+
+ethercat_devices:
+  - type:               Elmo
+    name:               LeftHipYawElmo
+    configuration_file: device_configurations/elmo_hip_90.yaml
+    ethercat_bus:       enp0s31f6
+    ethercat_address:   2
+
+  - type:               Elmo
+    name:               LeftHipRollElmo
+    configuration_file: device_configurations/elmo_hip_90.yaml
+    ethercat_bus:       enp0s31f6
+    ethercat_address:   3
+
+  - type:               Elmo
+    name:               LeftHipPitchElmo
+    configuration_file: device_configurations/elmo_hip_120.yaml
+    ethercat_bus:       enp0s31f6
+    ethercat_address:   4
+
+  - type:               Elmo
+    name:               LeftKneeElmo
+    configuration_file: device_configurations/elmo_knee.yaml
+    ethercat_bus:       enp0s31f6
+    ethercat_address:   5
+  
+  - type:               Elmo
+    name:               LeftAnkleElmo
+    configuration_file: device_configurations/elmo_ankle.yaml
+    ethercat_bus:       enp0s31f6
+    ethercat_address:   6
+
+  - type:               Elmo
+    name:               RightHipYawElmo
+    configuration_file: device_configurations/elmo_hip_90.yaml
+    ethercat_bus:       enp0s31f6
+    ethercat_address:   7
+
+  - type:               Elmo
+    name:               RightHipRollElmo
+    configuration_file: device_configurations/elmo_hip_90.yaml
+    ethercat_bus:       enp0s31f6
+    ethercat_address:   8
+
+  - type:               Elmo
+    name:               RightHipPitchElmo
+    configuration_file: device_configurations/elmo_hip_120.yaml
+    ethercat_bus:       enp0s31f6
+    ethercat_address:   9
+
+  - type:               Elmo
+    name:               RightKneeElmo
+    configuration_file: device_configurations/elmo_knee.yaml
+    ethercat_bus:       enp0s31f6
+    ethercat_address:   10
+
+  - type:               Elmo
+    name:               RightAnkleElmo
+    configuration_file: device_configurations/elmo_ankle.yaml
+    ethercat_bus:       enp0s31f6
+    ethercat_address:   11  
+
