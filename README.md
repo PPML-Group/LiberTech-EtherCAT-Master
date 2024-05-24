@@ -173,6 +173,19 @@ Copy over your old config and use that to configure your new kernel. Now to conf
 linux-5.15.158$ cp /boot/config-5.15.0-107-generic .config
 linux-5.15.158$ make oldconfig
 ```
+Revise the `.config` file，using `ctrl+F` find the key words，comment the five parameters
+
+`CONFIG_MODULE_SIG_ALL`
+`CONFIG_MODULE_SIG_KEY`
+`CONFIG_SYSTEM_TRUSTED_KEYS`
+`CONFIG_SYSTEM_REVOCATION_LIST`
+`CONFIG_SYSTEM_REVOCATION_KEYS` 
+
+and chang `CONFIG_DEBUG_INFO=n`, 不然新内核带debug信息超大。
+
+```bash
+linux-5.15.158$ gedit .config
+```
 
 This will ask for kernel options. For everything else then the `Preemption Model` use the default
 value (just press Enter) or adapt to your preferences. For the preemption model select `Fully Preemptible Kernel`:
