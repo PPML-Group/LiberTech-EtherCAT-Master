@@ -37,7 +37,7 @@ Also, a real-time OS is not always necessary. It sounds good for something to be
 
 
 #### Preempt-RT Kernel
-The optimized real-time ubuntu is available in version of **ubuntu 22.04** or newer, and also via [ubuntu pro](https://ubuntu.com/real-time). 
+The optimized real-time ubuntu is available in version of **ubuntu 22.04** or newer via [ubuntu pro](https://ubuntu.com/real-time). 
 Ubuntu Pro is free for personal and small scale commercial use in up to 5 machines. With an Ubuntu Pro subscription, launching the real-time kernel is as easy as:
 `pro attach <token>`
 `pro enable realtime-kernel`
@@ -173,22 +173,6 @@ Copy over your old config and use that to configure your new kernel. Now to conf
 linux-5.15.158$ cp /boot/config-5.15.0-107-generic .config
 linux-5.15.158$ make oldconfig
 ```
-Revise the `.config` file，using `ctrl+F` find the key words，comment the five parameters
-
-`CONFIG_MODULE_SIG_ALL`
-`CONFIG_MODULE_SIG_KEY`
-`CONFIG_SYSTEM_TRUSTED_KEYS`
-`CONFIG_SYSTEM_REVOCATION_LIST`
-`CONFIG_SYSTEM_REVOCATION_KEYS` 
-
-and chang `CONFIG_DEBUG_INFO=n`, 不然新内核带debug信息超大。
-
-```bash
-linux-5.15.158$ gedit .config
-```
-
-This will ask for kernel options. For everything else then the `Preemption Model` use the default
-value (just press Enter) or adapt to your preferences. For the preemption model select `Fully Preemptible Kernel`:
 
 ```bash
 Preemption Model
@@ -199,6 +183,23 @@ Preemption Model
   5. Fully Preemptible Kernel (RT) (PREEMPT_RT_FULL) (NEW)
 choice[1-5]: 5
 ```
+
+Revise the `.config` file，using `ctrl+F` find the key words，comment the five parameters
+
+```bash
+linux-5.15.158$ gedit .config
+```
+
+`CONFIG_MODULE_SIG_ALL`
+`CONFIG_MODULE_SIG_KEY`
+`CONFIG_SYSTEM_TRUSTED_KEYS`
+`CONFIG_SYSTEM_REVOCATION_LIST`
+`CONFIG_SYSTEM_REVOCATION_KEYS` 
+
+and chang `CONFIG_DEBUG_INFO=n`, 不然新内核带debug信息超大。
+
+This will ask for kernel options. For everything else then the `Preemption Model` use the default
+value (just press Enter) or adapt to your preferences. For the preemption model select `Fully Preemptible Kernel`:
 
 Now you can build the kernel. This will take some time...
 ```bash
