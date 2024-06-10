@@ -321,7 +321,91 @@ the `cpufrequtils` service. Check with `cpufreq-info`.
 For further information about governors, please see the [kernel
 documentation](https://www.kernel.org/doc/Documentation/cpu-freq/governors.txt).
 #### Other settings to reduce latency
-It's also important to optimize the performance of NIC
+It's also important to optimize the performance of NIC. Achieving a low latency in the real-time thread using 
+`ethtool rx-usecs = 0`
+Otherwise, NAPI intervenes in the network driver => if an NIC interrupt comes, all further NIC interrupts are blocked and the driver polls for a short time for further frames. The result are high latencies.
+
+With rx-usecs 0 NAPI is disabled and you get the minimum latency 
+` Copy Frame => NIC RAM => Reserve Kernel skb Buffer and Copy Frame => Copy Frame to Userspace RAM `
+
+But at now, with rx-usecs 0, this process is fired on every receiving frame. Otherwise, the process is used for multiple frames and reduce processing time.
+https://github.com/OpenEtherCATsociety/SOEM/issues/171
+
+SOEM adds very little delay to the cycle. Most of it is used up in the Linux kernel network stack on receive. Optimizing packet receive to user space handover is a topic that is well described on the internet. Your friend is ethtool, see drvcomment.txt.
+
+On the other hand it is not most optimal to send a packet and then wait for it to return (as you are doing).
+Your situation :
+- start cycle - send process data - receive process data - calculations - wait for next cycle start -
+Optimal solution 1 :
+- start cycle - receive process data - send process data - calculations - wait for next cycle start -
+Optimal solution 2 :
+- start cycle - receive process data - calculations - send process data - wait for next cycle start -
+
+Solution 1 optimizes compute efficiency, solution 2 optimizes calculation to setpoint delay.
+
+**There are known problems with NMI (for BIOS power management) that can generate latencies up to 2ms.**
+NMI stands for Non-Maskable Interrupt, which is a type of hardware interrupt that cannot be ignored (or masked) by the processor. Unlike regular interrupts, which can be enabled or disabled by software, NMIs are used for critical events that require immediate attention, such as hardware failures.
+
+##### Key Characteristics of NMI:
+1. **Non-Maskable**: NMIs cannot be disabled or ignored by the CPU. This ensures that critical events are always handled promptly.
+2. **High Priority**: NMIs have a higher priority than regular interrupts. When an NMI occurs, it immediately interrupts the current execution flow.
+3. **Common Uses**:
+   - **Hardware Failures**: NMIs are often used to signal severe hardware issues such as parity errors in memory or other hardware malfunctions.
+   - **Watchdog Timers**: Used to detect system hangs or crashes, forcing a reset or other recovery action.
+   - **Debugging**: In some systems, NMIs are used by debugging tools to interrupt the CPU for debugging purposes.
+
+##### How NMIs Work in BIOS:
+- When an NMI occurs, the CPU immediately suspends the current execution and jumps to a predefined interrupt handler defined by the BIOS or operating system.
+- The BIOS typically includes an NMI handler routine to diagnose the cause of the NMI, log the error, and attempt to recover from it if possible.
+- In some systems, the BIOS may also provide configuration options to enable or disable certain NMI sources.
+
+##### Common Sources of NMI:
+1. **Parity Errors**: Memory parity errors caused by faulty RAM modules.
+2. **I/O Device Errors**: Errors from critical I/O devices that cannot be ignored.
+3. **Watchdog Timer**: A hardware timer that triggers an NMI if the system becomes unresponsive.
+4. **Debugging**: Certain debugging tools can trigger an NMI to gain control of the CPU.
+
+##### Example of NMI Handling in BIOS:
+When an NMI is triggered, the BIOS or operating system will execute an NMI handler function. This function typically involves:
+1. **Logging the Error**: Recording details of the error in a log for diagnostics.
+2. **Attempting Recovery**: Trying to reset or reinitialize the failing component.
+3. **Alerting the User**: Providing a message to the user, often via a system beep or error message on the screen.
+4. **System Halt or Restart**: If the error is severe and cannot be recovered, the system may halt or automatically restart.
+
+##### Example Code Snippet:
+Here's a simplified example of an NMI handler in a C-like pseudocode:
+
+```c
+void NMI_Handler() {
+    // Log the NMI event
+    logEvent("Non-Maskable Interrupt occurred");
+
+    // Check the source of the NMI
+    if (checkMemoryParityError()) {
+        logEvent("Memory parity error detected");
+        attemptMemoryRecovery();
+    } else if (checkWatchdogTimeout()) {
+        logEvent("Watchdog timer timeout");
+        restartSystem();
+    } else {
+        logEvent("Unknown NMI source");
+    }
+
+    // Attempt to recover or halt the system
+    if (!recoverableError()) {
+        haltSystem();
+    }
+}
+```
+
+##### NMI Configuration in BIOS Setup:
+Some BIOS setups provide options to configure NMI behavior:
+- **Enable/Disable NMI**: Allow the user to enable or disable NMIs from certain sources.
+- **NMI Logging**: Options to enable detailed logging of NMI events.
+- **Watchdog Timer Settings**: Configure the behavior of the watchdog timer, including the timeout period and actions upon timeout.
+
+##### Conclusion:
+NMIs are crucial for handling critical system events that require immediate attention. The BIOS plays a key role in handling these interrupts, diagnosing the source of the problem, and attempting recovery. By understanding NMIs and their handling, you can better diagnose and troubleshoot severe hardware issues in computer systems.
 
 ### References:
 > **Preempt-RT**
