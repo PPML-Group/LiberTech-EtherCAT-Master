@@ -408,6 +408,34 @@ Some BIOS setups provide options to configure NMI behavior:
 ##### Conclusion:
 NMIs are crucial for handling critical system events that require immediate attention. The BIOS plays a key role in handling these interrupts, diagnosing the source of the problem, and attempting recovery. By understanding NMIs and their handling, you can better diagnose and troubleshoot severe hardware issues in computer systems.
 
+And also, it's important to config the NICs of the computer.
+[Configuring Your Computer and Network Adapters for Best Performance](https://supportcenter.pleora.com/s/article/Configuring-Your-Computer-and-Network-Adapters-for-Best-Performance-KBase#Configuring_Jumbo_Packets_Receive_Buffers_and_the_Interrupt_Moderation_Rate)
+
+#### Industrial PC (IPC) Bios configuration for real-time optimization
+In certain cases, **industrial PCs (IPCs)** offer greater flexibility in configuring low-level hardware to enhance performance, and it ensures higher reliability in harsh environments compared with the customized PCs. So it would be better using a IPC for robot control. 
+Here shows how to configure you IPC in terminal and bios.
+```bash
+$ sudo apt-get install intel-cmt-cat
+$ systemctl stop irqbalance.service 
+$ sudo systemctl disable irqbalance.service
+```
+
+In BIOS, configure the following:
+```
+[Advanced] -> [Power & Performance] -> [CPU - Power Management Control] -> [Intel(R) SpeedStep(tm)] -> [Disabled]
+[Advanced] -> [Power & Performance] -> [CPU - Power Management Control] -> [Intel(R) Speed Shift Technology] -> [Disabled]
+[Advanced] -> [Power & Performance] -> [CPU - Power Management Control] -> [C states] -> [Disabled]
+[Advanced] -> [CPU Configuration] -> [Hyper-Threading] -> [Disabled]
+[Advanced] -> [Power & Performance] -> [GT - Power Management Control] -> [Maximum GT frequency] -> [100Mhz]
+[Advanced] -> [ACPI Settings] -> [Enable Hibernation] -> [Disabled]
+[Advanced] -> [ACPI Settings] -> [ACPI Sleep State] -> [Disabled]
+[Chipset] -> [PCH-IO Configuration] -> [PCH Cross Throtting] -> [Disabled]
+[Chipset] -> [PCH-IO Configuration] -> [Legacy IO Low Latency] -> [Enabled]
+[Chipset] -> [PCH-IO Configuration] -> [PCI Express Configuration]-> [DMI Link ASPM Control] -> [Disabled]
+[Chipset] -> [PCH-IO Configuration] -> [SATA And RST Configuration]-> [Aggressive LPM Support] -> [Disabled]
+[Chipset] -> [System Agent (SA) Configuration] -> [PCI Express Configuration] -> [PCI Express Clock Gating] -> [Disabled]
+```
+
 ### References:
 > **Preempt-RT**
 >https://chenna.me/blog/2020/02/23/how-to-setup-preempt-rt-on-ubuntu-18-04/
