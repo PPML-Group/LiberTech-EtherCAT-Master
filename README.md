@@ -42,7 +42,7 @@ Ubuntu Pro is free for personal and small scale commercial use in up to 5 machin
 `pro attach <token>`
 `pro enable realtime-kernel`
 
-**For more, you can refer to [this](https://ubuntu.com/blog/real-time-kernel-technical).**
+**For more, you can refer to [this](https://ubuntu.com/blog/real-time-kernel-technical) and [this](https://www.cnblogs.com/wsg1100/p/17279712.html).**
 
 However, if you use ubuntu 20.04 or older and without consideration for ubuntu pro, building real-time linux kernel using preempt-RT patches is a good way. 
 To get real-time support into a ubuntu system, the following steps have to be performed:

@@ -1,0 +1,179 @@
+【安装依赖库】
+sudo apt-get install git libncurses5-dev make flex bison libssl-dev libelf-dev automake
+sudo apt install debhelper findutils autotools-dev autoconf automake libtool pkg-config libltdl-dev
+sudo apt install automake libtool m4 autoconf fuse dwarves
+sudo apt install net-tools
+sudo apt install zstd
+
+
+【切换gcc版本】
+在/etc/apt/sources.list文件最后加入一行
+deb [arch=amd64] http://archive.ubuntu.com/ubuntu focal main universe
+保存并退出
+终端运行sudo apt-get update
+安装并更新为gcc7
+sudo apt install gcc-7 g++-7
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 70
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 70
+sudo update-alternatives --config gcc
+sudo update-alternatives --config g++
+运行gcc -v和g++ -v查看是否切换成功。
+
+
+【编译和安装实时内核】
+打入实时补丁
+cd ./linux-dovetail-v5.15.y-dovetail
+sudo ../xenomai-v3.2.1/scripts/prepare-kernel.sh --arch=x86_64
+配置内核
+sudo make menuconfig
+在菜单中对这些选项进行配置：
+* General setup
+ 	--> Local version - append to kernel release: -xenomai3（起个区分内核的名字）
+    --> Timers subsystem
+ 		---> High Resolution Timer Support [*]（默认）
+* Pocessor type and features
+	 --> Processor family
+		 ---> Core 2/newer Xeon (if “cat /proc/cpuinfo | grep family” 
+                                returns 6, otherwise set as Generic otherwise)
+     --> Multi-core scheduler support []（关闭）
+     --> Linux guest support []（关闭）
+* Xenomai/cobalt
+	 --> Sizes and static limits
+		 ---> Number of registry slots  (512 --> 4096)
+		 ---> Size of system heap (Kb)  (4096 --> 4096)
+		 ---> Size of private heap (Kb) (256 --> 4096)
+		 ---> Size of shared heap (Kb)  (256 --> 4096)
+		 ---> Maximum number of POSIX timers per process (256 --> 1024)
+* Power management and ACPI options
+	 --> CPU Frequency scaling
+	 	---> CPU Frequency scaling []（关闭）
+	 --> ACPI (Advanced Configuration and Power Interface) Support
+	 	---> Processor []（关闭）
+	 --> CPU Idle
+		 ---> CPU idle PM support []（关闭）
+	 --> Suspend to RAM and standby []（关闭）
+	 --> Hibernation (aka suspend to disk) []（关闭）
+* Memory Management Options
+	 ---> Transparent Hugepage Support []（关闭）
+	 ---> Allow for memory compaction []（关闭）
+	 ---> Contiguous Memory Allocation []（关闭）
+	 ---> Page Migration []（关闭）
+* Device Drivers
+      --> Unisys visorbus driver [](默认关闭)
+保存并退出。
+再更改一些配置避免编译出错：
+sudo scripts/config --disable SYSTEM_TRUSTED_KEYS
+sudo scripts/config --disable SYSTEM_REVOCATION_KEYS
+sudo scripts/config --disable CONFIG_DEBUG_INFO_BTF
+编译内核和模块：
+sudo make -j8 bzImage
+sudo make -j8 modules
+sudo make INSTALL_MOD_STRIP=1 modules_install
+安装内核和模块：
+sudo cp .config  /boot/config-5.15.151-xenomai3
+sudo cp arch/x86_64/boot/bzImage /boot/vmlinuz-5.15.151-xenomai3
+sudo cp System.map /boot/System.map-5.15.151-xenomai3
+cd /lib/modules/5.15.151-xenomai3
+sudo update-initramfs -c -k 5.15.151-xenomai3
+允许非root用户：
+sudo addgroup xenomai --gid 1234
+sudo addgroup root xenomai
+sudo usermod -a -G xenomai $USER
+修改grub：
+sudo gedit /etc/default/grub
+对这些进行修改：
+GRUB_DEFAULT=0
+#GRUB_TIMEOUT_STYLE=hidden
+GRUB_TIMEOUT=10
+#GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Debian`
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash xenomai.allowed_group=1234"
+#GRUB_CMDLINE_LINUX=""
+GRUB_CMDLINE_LINUX="isolcpus=0 xenomai.supported_cpus=0x01 nohz_full=0 rcu_nocbs=0 irqaffinity=0 acpi_irq_nobalance noirqbalance i915.enable_rc6=0 i915.enable_dc=0 i915.disable_power_well=0  i915.enable_execlists=0  nmi_watchdog=0 nosoftlockup processor.max_cstate=0 intel.max_cstate=0 processor_idle.max_cstate=0  intel_idle.max_cstate=0 clocksource=tsc tsc=reliable nmi_watchdog=0 nosoftlockup intel_pstate=disable idle=poll nohalt nosmap  mce=ignore_ce"
+更新grub：
+sudo update-grub
+sudo update-grub2
+重启电脑!
+查看当前内核
+uname -a
+dmesg | grep -i cobalt
+dmesg | grep -i xeno
+
+
+【安装Xenoamai库】
+cd ./xenomai-v3.2.1
+sudo autoreconf -vif
+sudo ./scripts/bootstrap
+sudo ./configure --with-pic --with-core=cobalt --enable-smp --disable-tls --enable-dlopen-libs --disable-clock-monotonic-raw
+sudo make -j4
+sudo make install
+默认安装在/usr/xenomai目录下
+测试xenomai：
+sudo /usr/xenomai/bin/latency
+
+
+【安装IgH】
+解压ethercat-master压缩包，cd至源码目录下，终端运行：
+sudo ./bootstrap
+sudo ./configure --prefix=/opt/etherlab --with-module-dir=/lib/modules/5.15.151-xenomai3 --enable-8139too=no --enable-igb=yes --enable-rtdm=yes --with-xenomai-dir=/usr/xenomai --enable-cycles --enable-hrtimer --enable-rt-syslog --enable-rtmutex --enable-eoe=no
+sudo make 
+sudo make modules
+sudo make install
+sudo make modules_install
+安装在/opt/etherlab目录下
+终端运行
+sudo mkdir /etc/sysconfig 
+sudo cp /opt/etherlab/etc/sysconfig/ethercat /etc/sysconfig/  
+sudo cp /opt/etherlab/etc/init.d/ethercat /etc/init.d/
+sudo cp /opt/etherlab/bin/ethercat  /usr/bin/
+修改配置文件：
+sudo gedit /etc/sysconfig/ethercat
+修改为：
+MASTER0_DEVICE=”xx:xx:xx:xx:xx:xx”  #I211网卡(EtherCAT)对应的MAC地址（ifconfig查看）
+DEVICE_MODULES=”igb”		 #指定网络驱动
+保存并退出
+终端运行sudo /etc/init.d/ethercat start启动主站
+运行sudo ethercat slaves查看总线上的从站情况
+
+
+【实时性能优化】
+终端运行：
+sudo apt-get install intel-cmt-cat
+systemctl stop irqbalance.service 
+sudo systemctl disable irqbalance.service
+<Delete>进入BIOS，设置这些选项：
+[Advanced] -> [Power & Performance] -> [CPU - Power Management Control] -> [Intel(R)
+SpeedStep(tm)] -> [Disabled]
+[Advanced] -> [Power & Performance] -> [CPU - Power Management Control] -> [Intel(R)
+Speed Shift Technology] -> [Disabled]
+[Advanced] -> [Power & Performance] -> [CPU - Power Management Control] -> [C states]
+-> [Disabled]
+[Advanced] -> [CPU Configuration] -> [Hyper-Threading] -> [Disabled]
+[Advanced] -> [Power & Performance] -> [GT - Power Management Control] -> [Maximum
+GT frequency] -> [100Mhz]
+[Advanced] -> [ACPI Settings] -> [Enable Hibernation] -> [Disabled]
+[Advanced] -> [ACPI Settings] -> [ACPI Sleep State] -> [Disabled]
+[Chipset] -> [PCH-IO Configuration] -> [PCH Cross Throtting] -> [Disabled]
+[Chipset] -> [PCH-IO Configuration] -> [Legacy IO Low Latency] -> [Enabled]
+[Chipset] -> [PCH-IO Configuration] -> [PCI Express Configuration]-> [DMI Link ASPM
+Control] -> [Disabled]
+[Chipset] -> [PCH-IO Configuration] -> [SATA And RST Configuration]-> [Aggressive LPM
+Support] -> [Disabled]
+[Chipset] -> [System Agent (SA) Configuration] -> [PCI Express Configuration] -> [PCI
+Express Clock Gating] -> [Disabled]
+
+
+【配置动态库】
+sudo gedit /etc/ld.so.conf
+加入xenomai和igh库的地址：
+/usr/xenomai/lib
+/opt/etherlab/lib
+保存并退出，终端运行：
+sudo ldconfig
+
+
+【运行测试程序】
+终端运行sudo /etc/init.d/ethercat start启动主站
+cd test_elmo
+编译make
+运行sudo ./main
+
