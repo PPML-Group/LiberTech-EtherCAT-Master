@@ -1,5 +1,5 @@
 # Liber-EtherCAT-Master
-The EtherCAT Master customized for robotic application.
+The EtherCAT Master customized for robotic application. Based on RSL's [work](https://github.com/leggedrobotics/soem_interface).
 ***
 
 ## SOEM and Real-Time Setting 
